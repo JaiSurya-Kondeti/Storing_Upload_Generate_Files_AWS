@@ -1,0 +1,116 @@
+name: Deploy FastAPI Image Upload App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+
+      - name: Install AWS SAM CLI
+        run: |
+          pip install aws-sam-cli
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Build SAM Application
+        run: sam build
+
+      - name: Deploy SAM Application
+        run: |
+          sam deploy \
+            --stack-name fastapi-image-upload-stack \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --capabilities CAPABILITY_IAM \
+            --region ${{ secrets.AWS_REGION }}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#AWSTemplateFormatVersion: '2010-09-09'
+#Transform: AWS::Serverless-2016-10-31
+#Description: FastAPI Image Upload + GIF Generator
+#
+#Globals:
+#  Function:
+#    Timeout: 60
+#    MemorySize: 1024
+#    Runtime: python3.10
+#
+#Resources:
+#
+#  UploadBucket:
+#    Type: AWS::S3::Bucket
+#    Properties:
+#      BucketName: api-upload-create-s3-bucket-12345-unique--1
+#
+#  TodoFunction:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      CodeUri: .
+#      Handler: main.handler
+#      Runtime: python3.10
+#      Architectures:
+#        - x86_64
+#      PackageType: Zip
+#
+#      Policies:
+#        - S3CrudPolicy:
+#            BucketName: api-upload-create-s3-bucket-12345-unique--1
+#
+#      Environment:
+#        Variables:
+#          BUCKET_NAME: api-upload-create-s3-bucket-12345-unique--1
+#
+#      Events:
+#        ApiEvent:
+#          Type: Api
+#          Properties:
+#            Path: /{proxy+}
+#            Method: ANY
+#
+#Outputs:
+#  ApiEndpoint:
+#    Description: API Gateway endpoint URL
+#    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
